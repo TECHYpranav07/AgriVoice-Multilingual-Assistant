@@ -7,8 +7,7 @@ An end-to-end, voice-first agricultural assistant tailored for Indian farmers, b
 
 ## 📸 Demo Screenshots
 
-### WhatsApp Voice & Text Assistant (Hindi & Marathi)
-![WhatsApp AgriVoice Demo](docs/images/whatsapp_demo.jpg)
+
 
 ### Modern React Web UI
 ![AgriVoice Web UI](docs/images/web_ui.png)
