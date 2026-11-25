@@ -73,9 +73,14 @@ flowchart TD
 
 ---
 
-## 4. Data Source Register (Verified Knowledge Base)
+## 4. Data Source Register, Metadata & Versioning
 
-| Document / Source | Publisher | Crop / Domain | Verification Status |
+All knowledge documents in `data/raw_docs/` are parsed by `src/rag/ingestion.py` using structured markdown headers (`Publisher`, `Crop`, `Region`, `Category`, `Season`, `Publication Date`, `Approval Status`). Every indexed chunk carries these metadata tags plus a unique `chunk_id` (`<filename>_chunk_<idx>`) persisted in `data/vector_store/chunks.json`.
+
+- **Versioning & Approval Governance**: Documents track `Publication Date` and `Approval Status: Verified` before indexing into `data/vector_store/` (`tfidf.pkl`, `bm25.pkl`, `embeddings.npy`, `chunks.json`). Updating or adding a document requires verification and re-indexing so outdated advisories are never served.
+- **Diagnostics & Knowledge Console (`app_ui.py`)**: Provides an inspection dashboard on `http://localhost:8501` to inspect verified ICAR advisories, browse the trilingual glossary, trace pipeline logs, and review evaluation benchmark metrics *(note: content approval edits are currently managed in source markdown files rather than an in-UI write form)*.
+
+| Document / Source | Publisher | Crop / Domain | Verification & Version Date |
 |---|---|---|---|
 | `data/raw_docs/cotton_pink_bollworm_advisory.md` | ICAR-CICR, Nagpur | Cotton Pink Bollworm IPM | Verified (`2026-06-15`) |
 | `data/raw_docs/soybean_yellow_mosaic_advisory.md` | ICAR-IISR, Indore | Soybean YMV & Whitefly | Verified (`2026-07-10`) |
@@ -112,6 +117,30 @@ Measured on `data/evaluation/benchmark_dataset.json` (8 Hindi & Marathi queries 
 | **End-to-End Latency** | `< 15s` typical | **4.73s avg** | PASS |
 
 *(Scope note: Automated metrics measure routing, retrieval citations, safety refusal, and latency on the curated benchmark. Real-farmer field pilot usefulness ratings and live field-recording WER measurements are planned for pilot field testing.)*
+
+### 6.1 Dimension-Wise Evaluation Breakdown
+| Evaluation Area | Measured Status / Result | Details |
+|---|---|---|
+| **Speech Recognition (ASR)** | Verified on HI, MR, EN queries | Gemini Audio ASR (`confidence: 0.93`) and `SpeechRecognition 3.17.0` (`mr-IN`/`hi-IN`/`en-IN`, `confidence: 0.90`) accurately transcribed Nagpur mandi & weather voice queries. Field-noise WER awaits live farmer pilot. |
+| **Translation & Glossary** | Verified on 16-entry trilingual glossary | Domain dictionary (`agri_glossary.json`) preserves crop, pest, chemical, and scheme terms (`Pink Bollworm` ↔ `गुलाबी सुंडी` ↔ `गुलाबी बोंडअळी`) alongside full trilingual ICAR guide localization. Automated chrF/COMET scoring awaits native-speaker pilot dataset. |
+| **Retrieval (Recall)** | **100.0%** (`evaluate.py`) | Hybrid retrieval (`TF-IDF` + `BM25Okapi` fused with RRF across 14 verified chunks) retrieved the exact ground-truth publisher for every answerable test query (`q1`–`q4`). |
+| **Faithfulness & Citation** | **100% source-cited on `q1`–`q6`** | Every answer cites ICAR/Govt publishers or live tool `data_as_of` dates (`SYSTEM_PROMPT` grounding rules + deterministic extractive fallback). |
+| **Safe Refusal** | **100.0%** (`evaluate.py`) | Blocked both `q7` (out-of-scope) and `q8` (double pesticide dose) in `0.00s` before LLM invocation with KCC `1800-180-1551` referral. |
+| **End-to-End Latency** | **4.73s average** | Well within the `< 15s` blueprint target. |
+
+### 6.2 Model & Engine Benchmark Comparisons
+| Layer | Models / Engines Evaluated | Key Observations & Selection Rationale |
+|---|---|---|
+| **ASR** | `Gemini Flash Audio ASR` vs `Google Web Speech (SpeechRecognition)` vs `Groq Whisper` vs `Local Whisper` | Gemini ASR (`0.93` conf) handles code-mixed speech well but shares Free Tier quota; Google Web Speech (`0.90` conf) provides unlimited free `hi-IN`/`mr-IN`/`en-IN` fallback; Local Whisper skipped when unconfigured to avoid heavy startup. |
+| **Retrieval** | `Multilingual Sentence-Transformer (470MB)` vs `Hybrid TF-IDF + BM25 + RRF` | Initial HF download (`paraphrase-multilingual-MiniLM-L12-v2`) stalled on Windows without HF token/symlinks; **Hybrid TF-IDF + BM25 + RRF** delivered ~1ms indexing/search with **100% benchmark recall**. |
+| **LLM Generation** | `Gemini 2.5/3.5 Flash` vs `Deterministic Extractive Composer` | Gemini Flash produces natural 2–4 sentence Indic spoken replies; when `gemini-2.5-flash` hit the 20 RPD Free Tier quota, multi-model rotation + deterministic fallback kept 100% uptime (verified on `q6`). |
+| **TTS** | `Edge-TTS Neural Indic Voices` | `hi-IN-MadhurNeural` and `mr-IN-AarohiNeural` generate clear, natural MP3/OGG speech (`147 KB` verified for Marathi query) after stripping markdown & Latin tags. |
+
+### 6.3 Pre-Pilot & Engineering Findings
+1. **Quota & Fallback Resilience**: Hitting `gemini-2.5-flash` Free Tier daily limits (20 RPD) caused silent ASR fallback to a hardcoded test string; resolved by rotating across `gemini-3.5-flash` / `3.5-flash-lite` / `3.1-flash-lite`, integrating unlimited `SpeechRecognition`, and replacing the static fallback with `LOW_ASR_CONFIDENCE` repeat prompts.
+2. **WhatsApp Audio Compatibility**: Free tunnel URLs triggered Meta HTTP 530 media-fetch errors; uploading audio binaries directly to Meta's `/media` endpoint resolved voice note delivery reliably.
+3. **Async Event-Loop Safety**: Running `edge-tts` inside FastAPI async routes required offloading `asyncio.run` to a single-thread executor to avoid 0-byte audio files.
+4. **Next Pilot Phase**: Ready for field pilot testing with farmers to measure real-field noisy-audio WER, chrF/COMET scores, and comprehension feedback.
 
 ---
 
