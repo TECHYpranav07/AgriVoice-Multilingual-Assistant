@@ -1,0 +1,146 @@
+# 🌾 AgriVoice — Complete Project Documentation & Submission Report
+
+**Project Title:** Voice-First Multilingual Agricultural Assistant for Indian Farmers  
+**Technical Blueprint:** Sagveek Technologies Pvt. Ltd. (`Voice_First_Agri_Assistant_Problem_Statement.pdf`)  
+**Languages Supported:** Hindi (`hi`), Marathi (`mr`), English (`en`)  
+
+---
+
+## 1. Project & Live Deployment Links
+
+| Resource | URL / Command | Notes |
+|---|---|---|
+| **GitHub Repository** | https://github.com/TECHYpranav07/AgriVoice-Multilingual-Assistant | Full source code, docs & evaluation benchmark |
+| **Lovable Cloud UI Project** | https://lovable.dev/projects/131f89ac-ecda-44a9-b168-bd91b53cc883 | Interactive web design & component source |
+| **Local React Web App** | `http://localhost:5173` | Run via `cd frontend && npm run dev` |
+| **FastAPI Backend & Swagger API Docs** | `http://127.0.0.1:8000/docs` | Run via `python -u start_whatsapp_server.py` |
+| **Streamlit Diagnostics & Admin Console** | `http://localhost:8501` | Run via `streamlit run app_ui.py` |
+| **WhatsApp Webhook Endpoint (Ngrok)** | `https://swapping-monoxide-thesaurus.ngrok-free.dev/webhook` | Dynamic HTTPS tunnel to Meta Cloud API |
+
+---
+
+## 2. Live Application Screenshots
+
+### WhatsApp Voice & Text Bot (`+1 555-158-9387`)
+![WhatsApp Voice & Text Demo](docs/images/whatsapp_demo.jpg)
+
+### AgriVoice Interactive React Web UI (`http://localhost:5173`)
+![AgriVoice React Web UI](docs/images/web_ui.png)
+
+---
+
+## 3. Problem Statement & Objectives
+
+Farmers rely on timely decisions for pesticide application, crop sales (mandi pricing), weather suitability, and government schemes (`PM-KISAN`, `PMFBY`). Information exists across fragmented PDFs and portals in formal English/Hindi, making voice-first local-language access essential.
+
+**Objectives Achieved:**
+1. Accept **spoken voice notes and text** in **Hindi, Marathi, and English** via Web UI & WhatsApp.
+2. Answer **crop advice, pest/disease IPM, government scheme, market price, and agromet weather** queries.
+3. Ground every answer in verified ICAR/government documents and live tool outputs with **explicit source citations and `data as of` dates**.
+4. Return short, conversational spoken audio replies via neural TTS (**Edge-TTS**: `hi-IN-MadhurNeural`, `mr-IN-AarohiNeural`).
+5. Enforce a **Confidence & Safety Gate** to refuse unsafe chemical overdose or out-of-scope queries and refer users to the **Kisan Call Centre (`1800-180-1551`)**.
+
+---
+
+## 3. System Architecture & 8-Layer Design
+
+```mermaid
+flowchart TD
+    A["Channel Layer: WhatsApp Cloud API / React Web UI (:5173) / Streamlit (:8501)"] --> B["Audio Processing: FFmpeg 16 kHz Mono WAV"]
+    B --> C["Speech Layer (ASR): Groq Whisper / Gemini 2.5 Flash Audio ASR"]
+    C --> D["Language & NLU Layer: Language ID, Intent Router, Entity Extraction, Trilingual Glossary"]
+    D -->|crop_advice / scheme| E["Retrieval Layer: Hybrid Vector Store (TF-IDF + BM25Okapi + RRF)"]
+    D -->|market_price| F["Mandi Tool: APMC Modal/Min/Max Rates"]
+    D -->|weather| G["Weather Tool: Open-Meteo Agromet + Spray Advisory"]
+    E --> H["Confidence & Safety Gate (Overdose / Out-of-Scope Guardrail)"]
+    F --> H
+    G --> H
+    H -->|refuse| I["Safe Refusal + Kisan Call Centre 1800-180-1551"]
+    H -->|proceed| J["Grounded Generator: Gemini 2.5 Flash / Extractive Fallback + Citations"]
+    I --> K["Speech Synthesis: Edge-TTS Neural Indic Audio (.mp3 / .ogg)"]
+    J --> K
+    K --> A
+```
+
+### Module Mapping (`src/` Directory)
+- **Channel & Audio (`src/channel/`)**: `audio_converter.py` (16 kHz WAV & OGG Opus conversion), `whatsapp_client.py` (Meta Graph API v21.0 webhook verification, media download, direct `/media` upload, text & voice replies).
+- **Speech Layer (`src/speech/`)**: `asr.py` (Groq Whisper Turbo → Gemini 2.5 Flash Multimodal ASR → local Whisper fallback), `tts.py` (async/thread-safe Edge-TTS synthesis with markdown & scientific-tag stripping).
+- **NLU & Translation (`src/nlu/`)**: `intent_classifier.py` (trilingual intent & entity extraction including crop, mandi, and overdose detection), `translator.py` (domain glossary query expansion preserving exact crop/pest terminology).
+- **Knowledge Ingestion & Hybrid RAG (`src/rag/`)**: `ingestion.py` (metadata parser + heading-aware markdown chunker), `vector_db.py` (TF-IDF dense + BM25 sparse index), `retriever.py` (Reciprocal Rank Fusion).
+- **Live Data Tools (`src/tools/`)**: `mandi_tool.py` (APMC rates with `data_as_of` dates), `weather_tool.py` (live Open-Meteo forecast + wind/rain/temperature chemical spray suitability advisory).
+- **Safety Gate & Answer Generation (`src/generation/`)**: `confidence_gate.py`, `generator.py` (short 2–4 sentence spoken style with mandatory citations).
+- **Orchestrator & Evaluation**: `src/pipeline.py`, `evaluate.py`.
+
+---
+
+## 4. Data Source Register (Verified Knowledge Base)
+
+| Document / Source | Publisher | Crop / Domain | Verification Status |
+|---|---|---|---|
+| `data/raw_docs/cotton_pink_bollworm_advisory.md` | ICAR-CICR, Nagpur | Cotton Pink Bollworm IPM | Verified (`2026-06-15`) |
+| `data/raw_docs/soybean_yellow_mosaic_advisory.md` | ICAR-IISR, Indore | Soybean YMV & Whitefly | Verified (`2026-07-10`) |
+| `data/raw_docs/wheat_rust_and_irrigation.md` | ICAR-IIWBR, Karnal | Wheat Rust & CRI Irrigation | Verified (`2026-03-01`) |
+| `data/raw_docs/pm_kisan_samman_nidhi.md` | Ministry of Agriculture, GoI | PM-KISAN ₹6,000/yr & e-KYC | Verified (`2026-01-01`) |
+| `data/raw_docs/pmfby_crop_insurance_guide.md` | PMFBY Directorate, GoI | Crop Insurance & 72-Hr Claim | Verified (`2026-02-15`) |
+| `data/glossary/agri_glossary.json` | Curated Domain Dictionary | Trilingual Crop/Pest/Chemical Terms | Verified |
+| Live Agromet Forecast | Open-Meteo API | Temp, Humidity, Rain, Wind, Spray | Live API |
+| Mandi Benchmark Feed | Agmarknet / APMC Yards | Cotton, Soybean, Wheat, Onion, Gram | Live / Cached |
+
+---
+
+## 5. REST API & Webhook Documentation
+
+- `GET /health` → Returns `{"status": "healthy", "vector_chunks": 14}`.
+- `POST /api/query/text` → Body `{"query": "...", "language": "hi"|"mr"|"en"}`. Returns grounded text answer, citation, `audio_url`, `intent`, `gate_decision`, `latency_seconds`, and `logs`.
+- `POST /api/query/voice` → Multipart `file` (`recording.webm` / `.ogg` / `.wav`) + `language`. Runs FFmpeg → ASR → RAG/Tool → TTS and returns answer + `audio_url`.
+- `GET /api/mandi?commodity=cotton&location=nagpur` → Returns selected rate card and comparison table for all 5 crops.
+- `GET /api/weather?location=nagpur` → Returns live temperature, humidity, rain, wind speed, and chemical spray advisory.
+- `GET /api/knowledge` → Returns verified ICAR documents and trilingual glossary.
+- `GET/POST /webhook` → Meta WhatsApp Cloud API verification handshake and incoming message processor.
+
+---
+
+## 6. Evaluation Benchmark Results (`python evaluate.py`)
+
+Measured on `data/evaluation/benchmark_dataset.json` (8 Hindi & Marathi queries covering crop IPM, schemes, mandi rates, weather, out-of-scope refusal, and chemical overdose adversarial tests), saved in `data/evaluation/evaluation_report.json`:
+
+| Metric | Blueprint Target | Measured Score | Status |
+|---|---|---|---|
+| **Intent Classification Accuracy** | High routing reliability | **100.0% (8/8)** | PASS |
+| **Retrieval & Grounding Recall** | `>= 85%` | **100.0%** | PASS |
+| **Safe Refusal Rate** | `>= 90%` | **100.0%** | PASS |
+| **End-to-End Latency** | `< 15s` typical | **4.73s avg** | PASS |
+
+*(Scope note: Automated metrics measure routing, retrieval citations, safety refusal, and latency on the curated benchmark. Real-farmer field pilot usefulness ratings and live field-recording WER measurements are planned for pilot field testing.)*
+
+---
+
+## 7. Deployment & Setup Guide
+
+1. **Configure Environment**: Copy `.env.example` to `.env` and add `GEMINI_API_KEY` (and optional `GROQ_API_KEY`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`). Never commit `.env`.
+2. **Install Python Dependencies**: Ensure Python 3.10+ and `ffmpeg` are installed.
+3. **Start Backend & WhatsApp Tunnel**:
+   ```powershell
+   python -u start_whatsapp_server.py
+   ```
+4. **Start Local React Web UI**:
+   ```powershell
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   Visit `http://localhost:5173`.
+5. **Run Benchmark Evaluation**:
+   ```powershell
+   python evaluate.py
+   ```
+
+---
+
+## 8. Farmer User Guide
+
+1. **Choose Language**: Tap **हिंदी**, **मराठी**, or **English** in the header—the entire interface, quick questions, and all **ICAR Guides** translate immediately.
+2. **Ask by Voice or Text**: Tap the large **Microphone** button to speak your question, or tap any quick preset chip. Wait a moment for the text answer + automatic spoken audio reply.
+3. **Check Mandi & Spray Safety**: Open **Mandi & Weather** to check daily modal/min/max prices across crops and confirm whether wind speed (`≤ 15 km/h`) and rain (`≤ 0.5 mm`) allow safe chemical spraying.
+4. **Browse Verified Guides**: Open **ICAR Guides** to read pest management and scheme guidelines in your preferred language and search farming terms in the trilingual glossary.
+5. **Emergency Help**: For critical crop damage or pesticide doubts, call **Kisan Call Centre (`1800-180-1551`)** directly from the safety card or footer.

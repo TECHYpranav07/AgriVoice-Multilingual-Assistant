@@ -1,0 +1,32 @@
+{
+  "crops": {
+    "cotton": {"en": "Cotton", "hi": "कपास", "mr": "कापूस"},
+    "soybean": {"en": "Soybean", "hi": "सोयाबीन", "mr": "सोयाबीन"},
+    "wheat": {"en": "Wheat", "hi": "गेहूं", "mr": "गहू"},
+    "rice": {"en": "Paddy/Rice", "hi": "धान / चावल", "mr": "भात / धान"},
+    "sugarcane": {"en": "Sugarcane", "hi": "गन्ना", "mr": "ऊस"},
+    "onion": {"en": "Onion", "hi": "प्याज", "mr": "कांदा"},
+    "gram": {"en": "Chickpea/Gram", "hi": "चना", "mr": "हरभरा"}
+  },
+  "pests_and_diseases": {
+    "pink_bollworm": {"en": "Pink Bollworm", "hi": "गुलाबी सुंडी", "mr": "गुलाबी बोंडअळी"},
+    "yellow_mosaic": {"en": "Yellow Mosaic Virus", "hi": "पीला मोज़ेक वायरस", "mr": "पिवळा मोझॅक व्हायरस"},
+    "fall_armyworm": {"en": "Fall Armyworm", "hi": "सैनिक कीट / फॉल आर्मीवर्म", "mr": "लष्करी अळी"},
+    "leaf_curl": {"en": "Leaf Curl", "hi": "पत्ती मरोड़ रोग", "mr": "चुरडा-मुरडा / पाने आकसणे"},
+    "aphids": {"en": "Aphids / Mawa", "hi": "माहू / चेपा", "mr": "मावा"}
+  },
+  "chemicals_and_practices": {
+    "neem_oil": {"en": "Neem Oil 1500 ppm", "hi": "नीम का तेल 1500 पीपीएम", "mr": "कडुनिंब तेल 1500 पीपीएम"},
+    "urea": {"en": "Urea", "hi": "यूरिया", "mr": "युरिया"},
+    "dap": {"en": "DAP", "hi": "डीएपी", "mr": "डीएपी"},
+    "chlorantraniliprole": {"en": "Chlorantraniliprole 18.5% SC", "hi": "क्लोरेंट्रानिलिप्रोल 18.5% एससी", "mr": "क्लोरँट्रानिलिप्रोल 18.5% एससी"}
+  },
+  "schemes": {
+    "pm_kisan": {"en": "PM Kisan Samman Nidhi", "hi": "प्रधानमंत्री किसान सम्मान निधि योजना", "mr": "प्रधानमंत्री किसान सन्मान निधी योजना"},
+    "pmfby": {"en": "Pradhan Mantri Fasal Bima Yojana", "hi": "प्रधानमंत्री फसल बीमा योजना", "mr": "प्रधानमंत्री पीक विमा योजना"},
+    "kisan_credit_card": {"en": "Kisan Credit Card (KCC)", "hi": "किसान क्रेडिट कार्ड", "mr": "किसान क्रेडिट कार्ड"}
+  },
+  "emergency_helpline": {
+    "kisan_call_centre": {"phone": "1800-180-1551", "name": "Kisan Call Centre (Toll Free)"}
+  }
+}
