@@ -1,5 +1,7 @@
 # 🌾 AgriVoice: Voice-First Multilingual Agricultural Assistant
 
+**Submitted By:** Pranav Gopal Karande  
+**PRN:** `202301070195` | **Course:** MDM Generative AI  
 **GitHub Repository:** https://github.com/TECHYpranav07/AgriVoice-Multilingual-Assistant  
 **Lovable Project UI:** https://lovable.dev/projects/131f89ac-ecda-44a9-b168-bd91b53cc883
 

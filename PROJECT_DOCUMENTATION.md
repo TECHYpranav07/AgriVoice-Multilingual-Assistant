@@ -1,5 +1,8 @@
 # 🌾 AgriVoice — Complete Project Documentation & Submission Report
 
+**Submitted By:** Pranav Gopal Karande  
+**PRN:** `202301070195`  
+**Course:** MDM Generative AI  
 **Project Title:** Voice-First Multilingual Agricultural Assistant for Indian Farmers  
 **Technical Blueprint:** Sagveek Technologies Pvt. Ltd. (`Voice_First_Agri_Assistant_Problem_Statement.pdf`)  
 **Languages Supported:** Hindi (`hi`), Marathi (`mr`), English (`en`)  
